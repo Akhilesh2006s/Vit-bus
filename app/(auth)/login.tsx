@@ -1,28 +1,27 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Image, 
-  KeyboardAvoidingView, 
-  Platform, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   ActivityIndicator,
-  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 
-export default function Login() {
+function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
+
   const router = useRouter();
   const { login, register, isLoading, error, clearError } = useAuth();
 
@@ -70,9 +69,17 @@ export default function Login() {
       } else {
         await register(email, password);
       }
-      router.replace('/(tabs)');
+
+      // Redirect based on email domain
+      if (email.endsWith('@vitap.ac.in')) {
+        router.replace('/Faculty');
+      } else if (email.endsWith('@vitapstudent.ac.in')) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/'); // fallback
+      }
+
     } catch (err: any) {
-      // Error is already handled in the auth context
       console.log('Auth error:', err);
     }
   };
@@ -90,13 +97,13 @@ export default function Login() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoContainer}>
-          <Image 
-            source={{ uri: 'https://images.pexels.com/photos/7470/bus-people-public-transport.jpg' }} 
+          <Image
+            source={{ uri: 'https://images.pexels.com/photos/7470/bus-people-public-transport.jpg' }}
             style={styles.logo}
           />
           <Text style={styles.title}>VIT-AP Bus Tracker</Text>
@@ -152,8 +159,8 @@ export default function Login() {
 
           {error && <Text style={styles.errorText}>{error.message}</Text>}
 
-          <TouchableOpacity 
-            style={styles.authButton} 
+          <TouchableOpacity
+            style={styles.authButton}
             onPress={handleAuth}
             disabled={isLoading}
           >
@@ -174,8 +181,8 @@ export default function Login() {
 
           <TouchableOpacity style={styles.toggleMode} onPress={toggleAuthMode}>
             <Text style={styles.toggleModeText}>
-              {isLogin 
-                ? "Don't have an account? Register" 
+              {isLogin
+                ? "Don't have an account? Register"
                 : "Already have an account? Login"}
             </Text>
           </TouchableOpacity>
@@ -279,3 +286,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default Login;

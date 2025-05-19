@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { Video } from 'expo-av';
+import Video from 'expo-video';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Wand2, Save, Layers, Scissors } from 'lucide-react-native';
 import * as tf from '@tensorflow/tfjs';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 
-export default function EditorScreen() {
+function EditorScreen() {
   const { videoUri } = useLocalSearchParams();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -152,3 +152,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+export default EditorScreen;

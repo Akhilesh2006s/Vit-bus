@@ -1,62 +1,59 @@
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock, Bell, Search, Star, Info } from 'lucide-react-native';
-import { useAuth } from '../(auth)/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 const features = [
   {
     icon: MapPin,
-    title: 'Real-time Tracking',
-    description: 'Track your bus with live GPS updates',
+    title: 'Live Bus Monitoring',
+    description: 'Track all buses with real-time GPS and activity status.',
   },
   {
     icon: Clock,
-    title: 'Live Schedule',
-    description: 'Get accurate arrival times',
+    title: 'Performance Metrics',
+    description: 'Review punctuality, route adherence, and trip durations.',
   },
   {
     icon: Bell,
-    title: 'Smart Alerts',
-    description: 'Never miss your bus again',
+    title: 'Alerts & Notifications',
+    description: 'Get notified about delays, issues, or route changes instantly.',
   },
 ];
 
-const popularRoutes = [
-  { id: 'vv1', name: 'VV1', from: 'Main Bus Station', to: 'Benz Circle' },
-  { id: 'vv2', name: 'VV2', from: 'Gannavaram Airport', to: 'Krishna University' },
-  { id: 'vv3', name: 'VV3', from: 'Ibrahimpatnam', to: 'PVP Mall' },
+const monitoredRoutes = [
+  { id: '1', name: 'VV1', from: 'Main Bus Station', to: 'Benz Circle' },
+  { id: '2', name: 'VV2', from: 'Gannavaram Airport', to: 'Krishna University' },
+  { id: '3', name: 'VV3', from: 'Ibrahimpatnam', to: 'PVP Mall' },
 ];
 
-function HomeScreen() {
+function FacultyHomeScreen() {
   const router = useRouter();
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.welcomeText}>Welcome to</Text>
+          <Text style={styles.welcomeText}>Faculty Transport Portal</Text>
           <Text style={styles.title}>VIT-AP</Text>
-          <Text style={styles.subtitle}>BUS TRACKING</Text>
+          <Text style={styles.subtitle}>Bus Oversight & Analytics</Text>
         </View>
       </View>
 
       <TouchableOpacity style={styles.searchBar} onPress={() => router.push('/bus-routes')}>
         <Search size={20} color="#64748B" />
-        <Text style={styles.searchText}>Search for bus routes...</Text>
+        <Text style={styles.searchText}>Search or inspect bus operations...</Text>
       </TouchableOpacity>
 
-     
-
-      {/* Popular Routes */}
+      {/* Most Active Routes Section */}
       <View style={styles.popularRoutes}>
         <View style={styles.sectionHeader}>
           <Star size={20} color="#FACC15" />
-          <Text style={styles.sectionTitle}>Popular Routes</Text>
+          <Text style={styles.sectionTitle}>Most Active Routes</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routesScroll}>
-          {popularRoutes.map(route => (
+          {monitoredRoutes.map(route => (
             <View key={route.id} style={styles.routeCard}>
               <Text style={styles.routeName}>{route.name}</Text>
               <View style={styles.routeDetails}>
@@ -69,11 +66,11 @@ function HomeScreen() {
         </ScrollView>
       </View>
 
-      {/* Features Section */}
+      {/* Faculty Features Section */}
       <View style={styles.features}>
         <View style={styles.sectionHeader}>
           <Info size={20} color="#3366FF" />
-          <Text style={styles.sectionTitle}>Why Choose Us?</Text>
+          <Text style={styles.sectionTitle}>Dashboard Capabilities</Text>
         </View>
         {features.map((feature, index) => (
           <View key={index} style={styles.featureCard}>
@@ -91,12 +88,11 @@ function HomeScreen() {
       <Image source={require('./bus.jpeg')} style={styles.cityImage} />
 
       <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/bus-routes')}>
-        <Text style={styles.exploreButtonText}>Explore All Routes</Text>
+        <Text style={styles.exploreButtonText}>View All Operations</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -104,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: '#3A33A3',
+    backgroundColor: '#1E40AF',
     paddingTop: 60,
     paddingBottom: 30,
     borderBottomLeftRadius: 30,
@@ -154,7 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   exploreButton: {
-    backgroundColor: '#3366FF',
+    backgroundColor: '#2563EB',
     marginHorizontal: 20,
     marginBottom: 32,
     padding: 16,
@@ -249,4 +245,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default FacultyHomeScreen;

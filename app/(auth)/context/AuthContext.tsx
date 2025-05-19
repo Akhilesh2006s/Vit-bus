@@ -6,10 +6,11 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '../../cofig/firebase'; // Added missing storage import
+import { auth, db, storage } from '../../config/firebase';
 import { User, AuthError } from '../../types/auth';
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -24,7 +25,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
@@ -49,12 +50,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return unsubscribe;
   }, []);
 
-  const parseAuthError = (error: any): AuthError => {
-    return {
-      code: error.code || 'unknown',
-      message: error.message || 'An unknown error occurred',
-    };
-  };
+  const parseAuthError = (error: any): AuthError => ({
+    code: error.code || 'unknown',
+    message: error.message || 'An unknown error occurred',
+  });
 
   const clearError = () => {
     setError(null);
@@ -71,9 +70,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       clearError();
 
       if (!validateEmail(email)) {
-        throw { 
+        throw {
           code: 'auth/invalid-domain',
-          message: 'Only @vitapstudent.ac.in and @vitap.ac.in email domains are allowed'
+          message: 'Only @vitapstudent.ac.in and @vitap.ac.in email domains are allowed',
         };
       }
 
@@ -92,28 +91,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       clearError();
 
       if (!validateEmail(email)) {
-        throw { 
+        throw {
           code: 'auth/invalid-domain',
-          message: 'Only @vitapstudent.ac.in and @vitap.ac.in email domains are allowed'
+          message: 'Only @vitapstudent.ac.in and @vitap.ac.in email domains are allowed',
         };
       }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
+
       const firstName = email.split('@')[0].split('.')[0];
       const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-      
+
       await updateProfile(userCredential.user, {
-        displayName: displayName
+        displayName: displayName,
       });
 
       await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email: email,
-        displayName: displayName,
+        email,
+        displayName,
         createdAt: new Date(),
-        route: ''
+        route: '',
       });
-
     } catch (error: any) {
       setError(parseAuthError(error));
       throw error;
@@ -139,17 +137,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       clearError();
-      
+
       if (!auth.currentUser) {
         throw new Error('No authenticated user');
       }
 
       await updateProfile(auth.currentUser, data);
-      
+
       const userRef = doc(db, 'users', auth.currentUser.uid);
       await setDoc(userRef, data, { merge: true });
-      
-      setUser(prev => prev ? { ...prev, ...data } : null);
+
+      setUser(prev => (prev ? { ...prev, ...data } : null));
     } catch (error: any) {
       setError(parseAuthError(error));
       throw error;
@@ -167,44 +165,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       clearError();
 
-      console.log("Starting profile image upload process");
-      console.log("Image URI:", uri);
-
-      // Check if URI is valid
       if (!uri || typeof uri !== 'string' || !uri.startsWith('file:')) {
         throw new Error(`Invalid image URI: ${uri}`);
       }
 
-      console.log("Fetching image data");
       const response = await fetch(uri);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
 
-      console.log("Converting to blob");
       const blob = await response.blob();
-      console.log("Blob size:", blob.size);
-      
+
       if (blob.size === 0) {
-        throw new Error("Image blob is empty");
+        throw new Error('Image blob is empty');
       }
-      
-      console.log("Creating storage reference");
+
       const storageRef = ref(storage, `profile_images/${auth.currentUser.uid}`);
-      
-      console.log("Uploading bytes");
+
       await uploadBytes(storageRef, blob);
-      
-      console.log("Getting download URL");
+
       const downloadURL = await getDownloadURL(storageRef);
-      console.log("Download URL:", downloadURL);
-      
-      console.log("Updating user profile");
+
       await updateUserProfile({ photoURL: downloadURL });
-      
+
       return downloadURL;
     } catch (error: any) {
-      console.error("Profile image upload error:", error);
       const parsedError = parseAuthError(error);
       setError(parsedError);
       throw parsedError;
@@ -222,16 +207,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     updateUserProfile,
     uploadProfileImage,
     error,
-    clearError
+    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
+const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
+
+export { AuthProvider, useAuth };
+export default AuthProvider;

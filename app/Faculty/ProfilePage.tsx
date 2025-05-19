@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  Linking
+  Linking,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Settings, Bell, LogOut, Camera, Globe } from 'lucide-react-native';
@@ -37,7 +37,7 @@ function ProfilePage() {
         Alert.alert('Logout Failed', 'An error occurred while logging out.');
       }
     } else if (action === 'preferences') {
-      router.push('/settings'); 
+      router.push('/settings');
     } else if (action === 'vtop') {
       Linking.openURL('https://vtop.vitap.ac.in/vtop/open/page');
     }
@@ -63,7 +63,6 @@ function ProfilePage() {
       if (!result.canceled && result.assets && result.assets[0].uri) {
         setUploadingImage(true);
         try {
-          console.log("Attempting to upload image:", result.assets[0].uri);
           await uploadProfileImage(result.assets[0].uri);
           Alert.alert('Success', 'Profile picture updated successfully!');
         } catch (error: any) {
@@ -95,41 +94,24 @@ function ProfilePage() {
               </View>
             ) : (
               <>
-                <Image
-                  source={{ uri: profileImage }}
-                  style={styles.profileImage}
-                />
-                <TouchableOpacity 
-                  style={styles.cameraButton}
-                  onPress={pickImage}
-                >
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                <TouchableOpacity style={styles.cameraButton} onPress={pickImage}>
                   <Camera size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               </>
             )}
           </View>
-          <Text style={styles.name}>{user?.displayName || 'User'}</Text>
-          <Text style={styles.email}>{user?.email || 'user@example.com'}</Text>
+          <Text style={styles.name}>{user?.displayName || 'Faculty Member'}</Text>
+          <Text style={styles.email}>{user?.email || 'faculty@example.com'}</Text>
           <View style={styles.badgeContainer}>
-            <Text style={styles.badge}>{isStudent ? 'Student' : 'Faculty'}</Text>
+            <Text style={styles.badge}>Faculty</Text>
           </View>
-        </View>
-      </View>
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>VV1</Text>
-          <Text style={styles.statLabel}>Route</Text>
         </View>
       </View>
 
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
-          <TouchableOpacity 
-            key={index} 
-            style={styles.menuItem}
-            onPress={() => handleMenuItemPress(item.action)}
-          >
+          <TouchableOpacity key={index} style={styles.menuItem} onPress={() => handleMenuItemPress(item.action)}>
             <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
               <item.icon size={24} color={item.color} />
             </View>
@@ -142,11 +124,15 @@ function ProfilePage() {
         <Text style={styles.infoTitle}>Account Information</Text>
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>User Type</Text>
-          <Text style={styles.infoValue}>{isStudent ? 'Student' : 'Faculty'}</Text>
+          <Text style={styles.infoValue}>Faculty</Text>
         </View>
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>Email</Text>
           <Text style={styles.infoValue}>{user?.email}</Text>
+        </View>
+        <View style={styles.infoItem}>
+          <Text style={styles.infoLabel}>Department</Text>
+          <Text style={styles.infoValue}>Computer Science (Example)</Text>
         </View>
       </View>
     </ScrollView>
@@ -228,94 +214,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginTop: -25,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    justifyContent: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
   menuContainer: {
     padding: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   menuLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1E293B',
+    color: '#1F2937',
   },
   infoSection: {
-    margin: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
   },
   infoTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1E293B',
-    marginBottom: 16,
+    marginBottom: 12,
+    color: '#1F2937',
   },
   infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    paddingVertical: 8,
   },
   infoLabel: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: 16,
+    color: '#6B7280',
   },
   infoValue: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500',
-    color: '#1E293B',
+    color: '#111827',
   },
 });
 
