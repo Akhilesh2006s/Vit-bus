@@ -22,6 +22,8 @@ import * as Google from 'expo-auth-session/providers/google';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { colors } from '../constants/colors';
 import Constants from "expo-constants";
+import axios from 'axios';
+
 
 const routes = [
   { name: "VV1", city: "Vijayawada" },
@@ -114,19 +116,19 @@ function Login() {
         if (email.endsWith('@vitapstudent.ac.in')) {
           await setSelectedRouteId(selectedRoute);
           
-          const token = await user?.getIdToken();
-          const response = await fetch(`${API_BASE_URL}/api/user/route`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ route: selectedRoute }),
-          });
+          //const token = await user?.getIdToken();
+          // const response = await fetch(`${API_BASE_URL}/api/user/route`, {
+          //   method: 'POST',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //     'Authorization': `Bearer ${token}`,
+          //   },
+          //   body: JSON.stringify({ route: selectedRoute }),
+          // });
 
-          if (!response.ok) {
-            throw new Error('Failed to save route to server');
-          }
+          // if (!response.ok) {
+          //   throw new Error('Failed to save route to server');
+          // }
         }
 
         // Redirect based on email domain
@@ -161,10 +163,13 @@ function Login() {
           photoURL: user.photoURL || '',
           displayName: user.displayName || '',
         });
-        router.replace('/routes/selectRoute');
+        router.replace('/(tabs)');
       });
     }
   }, [response]);
+
+    
+
 
   return (
     <KeyboardAvoidingView
@@ -232,7 +237,7 @@ function Login() {
                 />
               </View>
 
-              {email.endsWith( 'vitapstudent.ac.in') && (
+              {email.endsWith( '@vitapstudent.ac.in') && (
                 <View style={styles.routeSelectionContainer}>
                   <Text style={styles.label}>Select Your Bus Route</Text>
                   <View style={styles.citySection}>
