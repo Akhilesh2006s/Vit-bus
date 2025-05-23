@@ -13,8 +13,14 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Settings, Bell, LogOut, Camera, Globe } from 'lucide-react-native';
-import { useAuth } from '../(auth)/context/AuthContext';
+import { useAuth } from '../(auth)/context/AuthProvider';
 import { useRouter } from 'expo-router';
+import { colors } from '../constants/colors'; // ✅ Adjust the path if needed
+
+// import { useTheme } from '../(auth)/context/ThemeContext'; // update path as needed
+
+// const { isDark } = useTheme();
+// const theme = colors[isDark ? 'dark' : 'light'];
 
 const menuItems = [
   { icon: Bell, label: 'Notifications', color: '#F59E0B' },
@@ -27,15 +33,35 @@ function ProfilePage() {
   const { user, logout, uploadProfileImage, isLoading } = useAuth();
   const router = useRouter();
   const [uploadingImage, setUploadingImage] = useState(false);
+  // const { isDark } = useTheme();
+
+  
 
   const handleMenuItemPress = async (action: string | undefined) => {
     if (action === 'logout') {
+      Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+         onPress: async () => {
       try {
         await logout();
         router.replace('/login');
       } catch (error) {
         Alert.alert('Logout Failed', 'An error occurred while logging out.');
       }
+        },
+        },
+      ],
+      { cancelable: true }
+    );
     } else if (action === 'preferences') {
       router.push('/settings'); 
     } else if (action === 'vtop') {
@@ -80,11 +106,25 @@ function ProfilePage() {
     }
   };
 
+  // Helper function to get initials like Gmail
+  const getInitials = (name: string | undefined, email: string | undefined) => {
+    if (name) {
+      const names = name.trim().split(' ');
+      if (names.length === 1) return names[0][0].toUpperCase();
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return 'U'; // fallback
+  };
+
   const emailDomain = user?.email ? user.email.split('@')[1] : '';
   const isStudent = emailDomain === 'vitapstudent.ac.in';
-  const profileImage = user?.photoURL || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg';
+  const profileImage = user?.photoURL;
 
   return (
+    
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.profileSection}>
@@ -95,10 +135,18 @@ function ProfilePage() {
               </View>
             ) : (
               <>
-                <Image
-                  source={{ uri: profileImage }}
-                  style={styles.profileImage}
-                />
+                {profileImage ? (
+                  <Image
+                    source={{ uri: profileImage }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <View style={styles.initialsContainer}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(user?.displayName, user?.email)}
+                    </Text>
+                  </View>
+                )}
                 <TouchableOpacity 
                   style={styles.cameraButton}
                   onPress={pickImage}
@@ -180,6 +228,21 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 3,
     borderColor: '#FFFFFF',
+  },
+  initialsContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#3366FF', // Gmail blue color
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  initialsText: {
+    color: '#FFFFFF',
+    fontSize: 40,
+    fontWeight: 'bold',
   },
   cameraButton: {
     position: 'absolute',
@@ -316,6 +379,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#1E293B',
+
   },
 });
 

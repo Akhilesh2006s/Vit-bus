@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity,  Linking, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock, Bell, Search, Star, Info } from 'lucide-react-native';
 import { useAuth } from '../(auth)/context/AuthContext';
@@ -96,6 +96,90 @@ function HomeScreen() {
     </ScrollView>
   );
 }
+  
+  const team = [
+    {
+      name: 'Akhilesh S',
+      regNo: '23BCE7426',
+      role: 'FullStack & GitHub',
+      image: require('../assets/images/akhilesh.png'),
+      linkedin: 'https://www.linkedin.com/in/akhilesh-samayamanthula-60987b284',
+      instagram: 'https://www.instagram.com/akhileshs26',
+    },
+    {
+      name: 'Sravani D',
+      regNo: '23BCE20083',
+      role: 'Backend',
+      image: require('../assets/images/sravani.png'),
+      linkedin: 'https://www.linkedin.com/in/sravani-dasari-8b6ab42ba',
+      instagram: 'https://www.instagram.com/sravsss._06',
+    },
+    {
+      name: 'Lakshman Y',
+      regNo: '23BCE8546',
+      role: 'Frontend',
+      image: require('../assets/images/lakshman.png'),
+      linkedin: 'https://www.linkedin.com/in/lakshman-yalamanchili-00a937365',
+      instagram: 'https://www.instagram.com/lakshman007',
+    },
+    {
+      name: 'Sanjana P',
+      regNo: '23BCE7338',
+      role: 'Backend',
+      image: require('../assets/images/sanjana.png'),
+      linkedin: 'https://www.linkedin.com/in/sanjana-pasam-46029a367',
+      instagram: 'https://www.instagram.com/.sannjuu',
+    },
+    {
+      name: 'Manvika P',
+      regNo: '23BEC7196',
+      role: 'Frontend',
+      image: require('../assets/images/manvika.png'),
+      linkedin: 'https://www.linkedin.com/in/manvika-polavarapu-416582291',
+      instagram: 'https://www.instagram.com/manvika_polavarapu',
+    },
+  ];
+  
+  const linkedinLogo = require('../assets/images/icons/linkedin.png');
+  const instagramLogo = require('../assets/images/icons/instagram.png');
+  
+  function Index() {
+    const openLink = async (url) => {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn("Can't open URL:", url);
+      }
+    };
+  
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.heading}>Explore Routes</Text>
+  
+        {team.map((member, index) => (
+          <View key={index} style={styles.card}>
+            <Image source={member.image} style={styles.avatar} />
+  
+            <View style={styles.details}>
+              <Text style={styles.name}>{member.name}</Text>
+              <Text>{member.regNo}</Text>
+              <Text style={styles.role}>{member.role}</Text>
+  
+              <View style={styles.iconRow}>
+                <TouchableOpacity onPress={() => openLink(member.linkedin)}>
+                  <Image source={linkedinLogo} style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => openLink(member.instagram)}>
+                  <Image source={instagramLogo} style={styles.icon} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    );
+  }
 
 
 const styles = StyleSheet.create({
@@ -246,6 +330,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     flex: 1,
+  },
+  heading: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    backgroundColor: '#f9f9f9',
+    padding: 15,
+    borderRadius: 10,
+    width: '100%',
+    elevation: 3,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginRight: 20,
+    borderWidth: 2,
+    borderColor: '#ccc',
+  },
+  details: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  role: {
+    fontStyle: 'italic',
+    color: '#555',
+    marginBottom: 5,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  icon: {
+    width: 28,
+    height: 28,
+    marginRight: 12,
   },
 });
 
