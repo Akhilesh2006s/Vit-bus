@@ -1,4 +1,7 @@
+import * as WebBrowser from 'expo-web-browser';
+WebBrowser.maybeCompleteAuthSession();
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,9 +13,32 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './context/AuthProvider';
+import { auth } from '../config/firebase';
+import * as Google from 'expo-auth-session/providers/google';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { colors } from '../constants/colors';
+import Constants from "expo-constants";
+
+const routes = [
+  { name: "VV1", city: "Vijayawada" },
+  { name: "VV2", city: "Vijayawada" },
+  { name: "VV3", city: "Vijayawada" },
+  { name: "VV4", city: "Vijayawada" },
+  { name: "VV5", city: "Vijayawada" },
+  { name: "VV6", city: "Vijayawada" },
+  { name: "GV1", city: "Guntur" },
+  { name: "GV2", city: "Guntur" },
+  { name: "GV3", city: "Guntur" },
+  { name: "GV4", city: "Guntur" },
+  { name: "GV5", city: "Guntur" },
+  { name: "GV6", city: "Guntur" },
+];
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://git-backend-1-production.up.railway.app';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,9 +47,17 @@ function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [selectedRoute, setSelectedRoute] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const { login, register, isLoading, error, clearError } = useAuth();
+  const { login, register, isLoading: authLoading, error, clearError, setUserInfo, setSelectedRouteId, user } = useAuth();
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: 'http://1036966591471-gg5qhjuc132bpqflieubu5ms52trgtft.apps.googleusercontent.com',
+    androidClientId: 'http://1036966591471-2a1ai61lra8mpihktm5irqb6ak668sa3.apps.googleusercontent.com',
+    webClientId: 'http://1036966591471-eosv71b6i622hto2emvudsbfuvfld1c5.apps.googleusercontent.com',
+  });
 
   const validateEmail = (email: string) => {
     const validDomains = ['@vitapstudent.ac.in', '@vitap.ac.in'];
@@ -57,30 +91,55 @@ function Login() {
       isValid = false;
     }
 
+    if (!isLogin && !selectedRoute && email.endsWith('@vitapstudent.ac.in')) {
+      Alert.alert("Please select your bus route");
+      isValid = false;
+    }
+
     return isValid;
   };
 
   const handleAuth = async () => {
     if (!validateForm()) return;
 
+    setIsLoading(true);
     try {
       if (isLogin) {
         await login(email, password);
-      } else {
-        await register(email, password);
-      }
-
-      // Redirect based on email domain
-      if (email.endsWith('@vitap.ac.in')) {
-        router.replace('/Faculty');
-      } else if (email.endsWith('@vitapstudent.ac.in')) {
         router.replace('/(tabs)');
       } else {
-        router.replace('/'); // fallback
-      }
+        await register(email, password);
+        
+        // Save route if student
+        if (email.endsWith('@vitapstudent.ac.in')) {
+          await setSelectedRouteId(selectedRoute);
+          
+          const token = await user?.getIdToken();
+          const response = await fetch(`${API_BASE_URL}/api/user/route`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ route: selectedRoute }),
+          });
 
+          if (!response.ok) {
+            throw new Error('Failed to save route to server');
+          }
+        }
+
+        // Redirect based on email domain
+        if (email.endsWith('@vitap.ac.in')) {
+          router.replace('/Faculty');
+        } else {
+          router.replace('/(tabs)');
+        }
+      }
     } catch (err: any) {
       console.log('Auth error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,7 +148,23 @@ function Login() {
     clearError();
     setEmailError('');
     setPasswordError('');
+    setSelectedRoute('');
   };
+  
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).then((userCredential) => {
+        const user = userCredential.user;
+        setUserInfo({
+          photoURL: user.photoURL || '',
+          displayName: user.displayName || '',
+        });
+        router.replace('/routes/selectRoute');
+      });
+    }
+  }, [response]);
 
   return (
     <KeyboardAvoidingView
@@ -117,7 +192,7 @@ function Login() {
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={[styles.input, emailError ? styles.inputError : null]}
-              placeholder="Email (@vitapstudent.ac.in or @vitap.ac.in)"
+              placeholder="Email (@vitapstudent.ac.in or @vitap.ac.in )"
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
@@ -145,16 +220,61 @@ function Login() {
           </View>
 
           {!isLogin && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={[styles.input, passwordError ? styles.inputError : null]}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            </View>
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <TextInput
+                  style={[styles.input, passwordError ? styles.inputError : null]}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                />
+              </View>
+
+              {email.endsWith( 'vitapstudent.ac.in') && (
+                <View style={styles.routeSelectionContainer}>
+                  <Text style={styles.label}>Select Your Bus Route</Text>
+                  <View style={styles.citySection}>
+                    <Text style={styles.cityTitle}>📍 Vijayawada</Text>
+                    <View style={styles.routeContainer}>
+                      {routes.filter(route => route.city === "Vijayawada").map(route => (
+                        <TouchableOpacity 
+                          key={route.name} 
+                          style={[
+                            styles.routeButton,
+                            selectedRoute === route.name && styles.selectedRouteButton
+                          ]} 
+                          onPress={() => setSelectedRoute(route.name)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.routeText}>{route.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.citySection}>
+                    <Text style={styles.cityTitle}>📍 Guntur</Text>
+                    <View style={styles.routeContainer}>
+                      {routes.filter(route => route.city === "Guntur").map(route => (
+                        <TouchableOpacity 
+                          key={route.name} 
+                          style={[
+                            styles.routeButton,
+                            selectedRoute === route.name && styles.selectedRouteButton
+                          ]} 
+                          onPress={() => setSelectedRoute(route.name)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.routeText}>{route.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              )}
+            </>
           )}
 
           {error && <Text style={styles.errorText}>{error.message}</Text>}
@@ -162,9 +282,9 @@ function Login() {
           <TouchableOpacity
             style={styles.authButton}
             onPress={handleAuth}
-            disabled={isLoading}
+            disabled={isLoading || authLoading}
           >
-            {isLoading ? (
+            {(isLoading || authLoading) ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.authButtonText}>
@@ -284,6 +404,59 @@ const styles = StyleSheet.create({
     color: '#3366FF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  routeSelectionContainer: {
+    marginTop: 16,
+    width: '100%',
+  },
+  citySection: {
+    width: '100%',
+    backgroundColor: 'orange',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cityTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'darkbrown',
+    marginBottom: 12,
+  },
+  routeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  routeButton: {
+    width: '48%',
+    paddingVertical: 12,
+    marginBottom: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  selectedRouteButton: {
+    backgroundColor: '#E2E8F0',
+    borderColor: 'darkbrown',
+  },
+  routeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'darkbrown',
   },
 });
 
