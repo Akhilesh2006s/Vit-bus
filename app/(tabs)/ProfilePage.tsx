@@ -39,12 +39,29 @@ function ProfilePage() {
 
   const handleMenuItemPress = async (action: string | undefined) => {
     if (action === 'logout') {
+      Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+         onPress: async () => {
       try {
         await logout();
         router.replace('/login');
       } catch (error) {
         Alert.alert('Logout Failed', 'An error occurred while logging out.');
       }
+        },
+        },
+      ],
+      { cancelable: true }
+    );
     } else if (action === 'preferences') {
       router.push('/settings'); 
     } else if (action === 'vtop') {
